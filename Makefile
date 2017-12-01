@@ -4,7 +4,10 @@ DIR_SOURCES	:= src
 
 NAME		:= $(DIR_BUILD)/shoxy
 
-SRC			:=	$(DIR_SOURCES)/shoxy.c
+ARGS		?= 127.0.0.1 2222
+
+SRC			:=	$(DIR_SOURCES)/shoxy.c \
+						$(DIR_SOURCES)/network.c
 OBJ			:= $(SRC:.c=.o)
 
 CFLAGS		:= -W -Wall -Wextra -ansi -pedantic -g -I src/include
@@ -20,7 +23,7 @@ $(NAME): $(OBJ)
 build: $(NAME)
 
 run: build
-	./$(NAME)
+	./$(NAME) $(ARGS)
 
 clean:
 	$(RM) -f $(OBJ)
