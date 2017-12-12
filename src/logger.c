@@ -55,11 +55,7 @@ void log_info(const char *message)
 
 void log_debugf(const char *format, ...)
 {
-	va_list args;
-
-	va_start(args, format);
-	log_infof(format, args);
-	va_end(args);
+	log_infof(format);
 }
 
 void log_debug(const char *message)
