@@ -2,10 +2,12 @@
 #define SHOXY_CLIENT_H_
 
 #include "network.h"
+#include "ssh.h"
 
 typedef struct client_s
 {
-	network_t *link;
+	network_config_t *network;
+	ssh_config_t *ssh;
 	struct client_s *prev;
 	struct client_s *next;
 } client_t;

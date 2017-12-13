@@ -13,13 +13,15 @@ SRC			:=	$(DIR_SOURCES)/shoxy.c \
 						$(DIR_SOURCES)/client.c \
 						$(DIR_SOURCES)/network/network.c \
 						$(DIR_SOURCES)/network/poll.c \
-						$(DIR_SOURCES)/network/tcp.c
+						$(DIR_SOURCES)/network/tcp.c \
+						$(DIR_SOURCES)/ssh/server.c
 OBJ			:= $(SRC:.c=.o)
 
-CFLAGS		:= -W -Wall -Wextra -pedantic -I src/include
+CFLAGS	:= -W -Wall -Wextra -pedantic -I src/include
 ifeq ($(DEBUG), 1)
 	CFLAGS += -g
 endif
+LDFLAGS	:= -l ssh
 
 .PHONY: all build run clean fclean re
 
@@ -27,7 +29,7 @@ all: build
 
 $(NAME): $(OBJ)
 	@mkdir -p $(DIR_BUILD)
-	$(CC) $(OBJ) -o $(NAME)
+	$(CC) $(OBJ) $(LDFLAGS) -o $(NAME)
 
 build: $(NAME)
 

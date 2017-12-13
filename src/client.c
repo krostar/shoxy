@@ -1,6 +1,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "shoxy.h"
+#include "network.h"
+#include "ssh.h"
 #include "client.h"
 
 client_t *client_create()
@@ -13,9 +15,15 @@ client_t *client_create()
 		return NULL;
 	}
 
-	if ((client->link = malloc(sizeof(network_t))) == NULL)
+	if ((client->network = malloc(sizeof(network_config_t))) == NULL)
 	{
 		log_error("unable to allocate memory for client link");
+		return NULL;
+	}
+
+	if ((client->ssh = malloc(sizeof(ssh_config_t))) == NULL)
+	{
+		log_error("unable to allocate memory for client ssh session");
 		return NULL;
 	}
 
@@ -27,25 +35,26 @@ client_t *client_create()
 
 void client_delete(client_t *client)
 {
-	free(client->link);
+	free(client->network);
+	free(client->ssh);
 	free(client);
 }
 
 client_t *client_find_by_socket(client_t *clients, int socket)
 {
 	client_t *client;
-	for (client = clients; client != NULL && client->link->socket == socket; client = client->next)
+	for (client = clients; client != NULL && client->network->socket != socket; client = client->next)
 		;
 
 	if (client == NULL)
-		log_error("critical devlopment error: a fd without client has changed, wtf ??");
+		log_errorf("critical development error: fd %lu has no client, wtf ??", socket);
 	return (client);
 }
 
 void clients_list(client_t *clients)
 {
 	for (client_t *client = clients; client != NULL; client = client->next)
-		log_debugf("client from %s:%lu with fd %d", client->link->host_ip, client->link->local_port, client->link->socket);
+		log_debugf("client from %s:%lu with fd %d", client->network->host_ip, client->network->local_port, client->network->socket);
 }
 
 client_t *clients_add(client_t *clients, client_t *client_to_add)
@@ -59,7 +68,7 @@ client_t *clients_add(client_t *clients, client_t *client_to_add)
 	// insert client_to_add to order client by socket number
 	for (client_t *client = clients; client != NULL; client = client->next)
 	{
-		if (client_to_add->link->socket > client->link->socket)
+		if (client_to_add->network->socket > client->network->socket)
 			continue;
 		client_to_add->prev = client->prev;
 		client_to_add->next = client;
