@@ -1,104 +1,86 @@
 #include <unistd.h>
+#include <libssh/libssh.h>
+#include <libssh/server.h>
 #include <poll.h>
 #include "shoxy.h"
 #include "client.h"
 
-int poll_set_pollfd(int server_socket, client_t *clients, struct pollfd *to_monitor)
-{
-	int i = 0;
-
-	to_monitor[0].fd = server_socket;
-	to_monitor[0].events = POLLIN;
-
-	for (client_t *client = clients; client != NULL; client = client->next)
-	{
-		to_monitor[i + 1].fd = client->network->socket;
-		to_monitor[i + 1].events = POLLIN;
-		i++;
-	}
-	return (i + 1);
-}
-
-client_t *poll_do(int server_socket, client_t *clients, struct pollfd *to_monitor, int to_monitor_len)
-{
-	for (int i = 0; i < to_monitor_len; i++)
-	{
-		if (to_monitor[i].revents == 0)
-			continue;
-		else if (to_monitor[i].revents & POLLHUP || to_monitor[i].revents & POLLERR)
-			// we have a socket error, socket has not been closed yet but shutdown has already been called
-			// we have nothing to do other than close it and delete the client
-			clients = poll_handle_error(clients, to_monitor[i].fd);
-		else if (to_monitor[i].revents & POLLIN)
-			// we have something to read
-			clients = poll_handle_pollin(server_socket, clients, to_monitor[i].fd);
-		else if (to_monitor[i].revents & POLLOUT)
-			// we have something to write
-			clients = poll_handle_pollout(clients, to_monitor[i].fd);
-		else
-			log_debugf("unhandled event on socket %lu: %d", to_monitor[i].fd, to_monitor[i].revents);
-	}
-	return (clients);
-}
-
-client_t *poll_handle_error(client_t *clients, int socket)
+int network_poll_on_client_critical_error(client_t **clients, int socket)
 {
 	client_t *client;
 
-	log_errorf("an error ocurred on socket %d, terminate it", socket);
-	if ((client = client_find_by_socket(clients, socket)) == NULL)
+	if ((client = client_find_by_socket(*clients, socket)) == NULL)
 	{
-		log_errorf("client corresponding to socket %d is null", socket);
-		return (clients);
+		log_error("client corresponding to socket %d is null", socket);
+		return (NETWORK_RETURN_FAILURE);
 	}
-	clients = clients_remove(clients, client);
+	log_client_error(client, "a critical error occured or client disconnected");
+
+	ssh_event_remove_session(client->event, client->ssh->session);
+
+	*clients = clients_remove(*clients, client);
 	ssh_terminate_session(client);
-	tcp_terminate(client);
 	client_delete(client);
-	return (clients);
+
+	return (NETWORK_RETURN_SUCCESS);
 }
 
-client_t *poll_handle_pollin(int server_socket, client_t *clients, int socket)
+int network_poll_on_new_client(client_t **clients, network_server_data_t *data)
 {
 	client_t *client;
 
-	// server has a new client
-	if (socket == server_socket)
+	if ((client = tcp_accept(ssh_bind_get_fd(data->b))) == NULL)
 	{
-		client = tcp_accept(server_socket);
-		if (ssh_create_session(client) == SSH_RETURN_SUCCESS)
-			clients = clients_add(clients, client);
-		else
-		{
-			log_error("unable to create ssh session with client");
-			tcp_terminate(client);
-			client_delete(client);
-		}
+		log_error("unable to accept client");
+		return (NETWORK_RETURN_FAILURE);
 	}
-	else // one of the ssh client is talking
+
+	client->event = data->e;
+	if (ssh_create_session(client) == SSH_RETURN_SUCCESS)
+		*clients = clients_add(*clients, client);
+	else
 	{
-		log_debugf("socket %d has something to say", socket);
-		if ((client = client_find_by_socket(clients, socket)) == NULL)
-		{
-			log_errorf("client corresponding to socket %d is null", socket);
-			return (clients);
-		}
-		// do something about it
-		log_debugf("session state = %d", client->ssh->session);
+		log_client_error(client, "unable to create ssh session with client");
+		tcp_terminate(client);
+		client_delete(client);
+		return (NETWORK_RETURN_FAILURE);
 	}
-	return (clients);
+
+	if (ssh_bind_accept_fd(data->b, client->ssh->session, client->network->socket) != SSH_OK)
+	{
+		log_client_error(client, "unable to initialize ssh session: %s", ssh_get_error(data->b));
+		network_poll_on_client_critical_error(clients, client->network->socket);
+		return (NETWORK_RETURN_FAILURE);
+	}
+
+	if (ssh_handle_key_exchange(client->ssh->session) != SSH_OK)
+	{
+		log_client_error(client, "unable to exchange ssh keys: %s", ssh_get_error(client->ssh->session));
+		network_poll_on_client_critical_error(clients, client->network->socket);
+		return (NETWORK_RETURN_FAILURE);
+	}
+
+	if (ssh_event_add_session(data->e, client->ssh->session) != SSH_OK)
+	{
+		log_client_error(client, "unable to add session to ssh poll event: %s", ssh_get_error(data->e));
+		network_poll_on_client_critical_error(clients, client->network->socket);
+		return (NETWORK_RETURN_FAILURE);
+	}
+
+	return (NETWORK_RETURN_SUCCESS);
 }
 
-client_t *poll_handle_pollout(client_t *clients, int socket)
+int network_poll_on_state_change(socket_t fd, int revents, void *userdata)
 {
-	client_t *client;
+	network_server_data_t *cb_data = userdata;
+	client_t **clients = cb_data->clients;
 
-	log_debugf("socket %d has something to tell", socket);
-	if ((client = client_find_by_socket(clients, socket)) == NULL)
+	if (ssh_bind_get_fd(cb_data->b) == fd)
 	{
-		log_errorf("client corresponding to socket %d is null", socket);
-		return (clients);
+		if (revents & POLLIN)
+			if (network_poll_on_new_client(clients, cb_data) == NETWORK_RETURN_SUCCESS)
+				return (SSH_OK);
 	}
-	// do something about it
-	return (clients);
+
+	return (SSH_ERROR);
 }

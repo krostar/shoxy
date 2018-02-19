@@ -24,5 +24,5 @@ int main(int ac, char **av)
 	}
 
 	log_info("server close without errors");
-	return (0);
+	return (EXIT_SUCCESS);
 }

@@ -3,7 +3,7 @@
 
 void signal_handler(int sig)
 {
-	log_infof("signal %d has been catched", sig);
+	log_info("signal %d has been catched", sig);
 
 	// we only want to handle CTRL+C
 	if (sig != SIGINT)
@@ -18,6 +18,11 @@ int signal_catch_interruption()
 	if (signal(SIGINT, &signal_handler) == SIG_ERR)
 	{
 		log_error("unable to setup interruption signal catching");
+		return (0);
+	}
+	if (signal(SIGPIPE, &signal_handler) == SIG_ERR)
+	{
+		log_error("unable to setup pipe error signal catching");
 		return (0);
 	}
 	return (1);

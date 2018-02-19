@@ -14,14 +14,17 @@ SRC			:=	$(DIR_SOURCES)/shoxy.c \
 						$(DIR_SOURCES)/network/network.c \
 						$(DIR_SOURCES)/network/poll.c \
 						$(DIR_SOURCES)/network/tcp.c \
-						$(DIR_SOURCES)/ssh/server.c
+						$(DIR_SOURCES)/ssh/session.c \
+						$(DIR_SOURCES)/ssh/callback_request.c \
+						$(DIR_SOURCES)/ssh/callback_channel.c \
+						$(DIR_SOURCES)/ssh/exec.c
 OBJ			:= $(SRC:.c=.o)
 
 CFLAGS	:= -W -Wall -Wextra -pedantic -I src/include
 ifeq ($(DEBUG), 1)
 	CFLAGS += -g
 endif
-LDFLAGS	:= -l ssh
+LDFLAGS	:= -l ssh -l util
 
 .PHONY: all build run clean fclean re
 

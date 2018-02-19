@@ -48,7 +48,7 @@ int tcp_listen(const char *address, const size_t port)
 		return (NETWORK_RETURN_FAILURE);
 	}
 
-	return server_socket;
+	return (server_socket);
 }
 
 client_t *tcp_accept(const size_t server_socket)
@@ -98,14 +98,13 @@ client_t *tcp_accept(const size_t server_socket)
 	client->network->local_port = ntohs(client_info.sin_port);
 	if (inet_ntop(AF_INET, &(client_info.sin_addr), client->network->host_ip, INET_ADDRSTRLEN) == NULL)
 	{
-		log_errorf("unable to retrieve client IP: %s", strerror(errno));
+		log_client_error(client, "unable to retrieve client IP: %s", strerror(errno));
 		client_delete(client);
 		tcp_terminate(client);
 		return (NULL);
 	}
 
-	log_infof("new client connexion from %s:%lu on fd %d", client->network->host_ip, client->network->local_port, client->network->socket);
-
+	log_client_info(client, "connected");
 	return (client);
 }
 
@@ -113,10 +112,10 @@ int tcp_terminate(client_t *client)
 {
 	if (close(client->network->socket) == -1)
 	{
-		log_error("unable to close client socket");
+		log_client_error(client, "unable to close client socket: %s", strerror(errno));
 		return (NETWORK_RETURN_FAILURE);
 	}
 
-	log_infof("client from %s:%lu disconnected", client->network->host_ip, client->network->local_port);
+	log_client_info(client, "disconnected");
 	return (NETWORK_RETURN_SUCCESS);
 }

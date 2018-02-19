@@ -6,8 +6,9 @@
 
 typedef struct client_s
 {
-	network_config_t *network;
+	network_client_data_t *network;
 	ssh_config_t *ssh;
+	ssh_event event;
 	struct client_s *prev;
 	struct client_s *next;
 } client_t;
