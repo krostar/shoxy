@@ -61,7 +61,7 @@ client_t *tcp_accept(const size_t server_socket)
 
 	if ((client_socket = accept(server_socket, (struct sockaddr *)&client_info, &size)) == -1)
 	{
-		log_error("unable to accept from server socket");
+		log_error("unable to accept from server socket: %s", strerror(errno));
 		return (NULL);
 	}
 
@@ -71,7 +71,7 @@ client_t *tcp_accept(const size_t server_socket)
 	timeout.tv_sec = TCP_READ_TIMEOUT;
 	if (setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) == -1)
 	{
-		log_error("unable to set read timeout option on client socket");
+		log_error("unable to set read timeout option on client socket: %s", strerror(errno));
 		close(client_socket);
 		return (NULL);
 	}
@@ -81,7 +81,7 @@ client_t *tcp_accept(const size_t server_socket)
 	timeout.tv_sec = TCP_WRITE_TIMEOUT;
 	if (setsockopt(client_socket, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) == -1)
 	{
-		log_error("unable to set write timeout option on client socket");
+		log_error("unable to set write timeout option on client socket: %s", strerror(errno));
 		close(client_socket);
 		return (NULL);
 	}

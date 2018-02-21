@@ -11,9 +11,9 @@
 #define NETWORK_RETURN_SUCCESS 0
 #define NETWORK_RETURN_FAILURE -1
 
-#define TCP_POLL_TIMEOUT 1000
-#define TCP_READ_TIMEOUT 50  // optional
-#define TCP_WRITE_TIMEOUT 50 // optional
+#define TCP_POLL_TIMEOUT 100
+//#define TCP_READ_TIMEOUT 1000  // optional
+//#define TCP_WRITE_TIMEOUT 1000 // optional
 #define TCP_LISTEN_MAX 42
 
 // defined in client.h
@@ -21,7 +21,7 @@ typedef struct client_s client_t;
 
 typedef struct network_client_data_s
 {
-	int socket;
+	socket_t socket;
 	char host_ip[INET_ADDRSTRLEN];
 	size_t local_port;
 } network_client_data_t;
@@ -40,5 +40,6 @@ int tcp_terminate(client_t *client);
 int network_listen_and_serve(const char *address, const size_t port);
 int network_poll_on_client_critical_error(client_t **clients, int socket);
 int network_poll_on_state_change(socket_t fd, int revents, void *userdata);
+void network_poll_on_client_answer_command(client_t **clients);
 
 #endif

@@ -36,9 +36,7 @@ int network_poll_on_new_client(client_t **clients, network_server_data_t *data)
 	}
 
 	client->event = data->e;
-	if (ssh_create_session(client) == SSH_RETURN_SUCCESS)
-		*clients = clients_add(*clients, client);
-	else
+	if (ssh_create_session(client, data->b) != SSH_RETURN_SUCCESS)
 	{
 		log_client_error(client, "unable to create ssh session with client");
 		tcp_terminate(client);
@@ -46,12 +44,7 @@ int network_poll_on_new_client(client_t **clients, network_server_data_t *data)
 		return (NETWORK_RETURN_FAILURE);
 	}
 
-	if (ssh_bind_accept_fd(data->b, client->ssh->session, client->network->socket) != SSH_OK)
-	{
-		log_client_error(client, "unable to initialize ssh session: %s", ssh_get_error(data->b));
-		network_poll_on_client_critical_error(clients, client->network->socket);
-		return (NETWORK_RETURN_FAILURE);
-	}
+	*clients = clients_add(*clients, client);
 
 	if (ssh_handle_key_exchange(client->ssh->session) != SSH_OK)
 	{
@@ -83,4 +76,26 @@ int network_poll_on_state_change(socket_t fd, int revents, void *userdata)
 	}
 
 	return (SSH_ERROR);
+}
+
+void network_poll_on_client_answer_command(client_t **clients)
+{
+	for (client_t *client = *clients; client != NULL; client = client->next)
+	{
+		if (client->ssh->channel != NULL && !ssh_channel_is_eof(client->ssh->channel) && !ssh_channel_is_closed(client->ssh->channel))
+		{
+			if (client->ssh->exec_answer_buffer_len > 0)
+			{
+				int sent = ssh_channel_write(client->ssh->channel, client->ssh->exec_answer_buffer, client->ssh->exec_answer_buffer_len);
+				client->ssh->exec_answer_buffer_len -= sent;
+				memcpy(client->ssh->exec_answer_buffer, client->ssh->exec_answer_buffer + sent, client->ssh->exec_answer_buffer_len);
+				client->ssh->exec_answer_buffer = realloc(client->ssh->exec_answer_buffer, client->ssh->exec_answer_buffer_len);
+			}
+			if (client->ssh->close_channel)
+			{
+				network_poll_on_client_critical_error(clients, client->network->socket);
+				break;
+			}
+		}
+	}
 }

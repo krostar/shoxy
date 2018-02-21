@@ -8,6 +8,7 @@
 #include "client.h"
 #include "ssh.h"
 #include "ssh_callback.h"
+#include "ssh_command.h"
 
 int ssh_callback_request_service_default(client_t *client, ssh_message msg)
 {
@@ -47,7 +48,6 @@ int ssh_callback_request_auth_password(client_t *client, ssh_message msg)
 int ssh_callback_request_channel_pty(client_t *client, UNUSED ssh_message msg)
 {
 	log_client_debug(client, "new channel pty request");
-
 	ssh_message_channel_request_reply_success(msg);
 	return (SSH_RETURN_SUCCESS);
 }
@@ -67,7 +67,6 @@ int ssh_callback_request_channel_open(client_t *client, ssh_message msg)
 	client->ssh->channel = ssh_message_channel_request_open_reply_accept(msg);
 	client->ssh->channel_cb.userdata = client;
 	client->ssh->channel_cb.channel_data_function = &ssh_callback_channel_on_data;
-	client->ssh->channel_cb.channel_close_function = &ssh_callback_channel_on_close;
 	ssh_callbacks_init(&client->ssh->channel_cb);
 	if (ssh_set_channel_callbacks(client->ssh->channel, &client->ssh->channel_cb) != SSH_OK)
 	{
@@ -75,8 +74,12 @@ int ssh_callback_request_channel_open(client_t *client, ssh_message msg)
 		ssh_channel_free(client->ssh->channel);
 		return (SSH_RETURN_FAILURE);
 	}
+	client->ssh->close_channel = 0;
 	client->ssh->exec_command_buffer_len = 0;
 	client->ssh->exec_command_buffer = NULL;
+	client->ssh->exec_answer_buffer_len = 0;
+	client->ssh->exec_answer_buffer = NULL;
+	ssh_command_welcome(client);
 	return (SSH_RETURN_SUCCESS);
 }
 

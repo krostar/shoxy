@@ -27,6 +27,8 @@ void network_loop(ssh_bind b)
 		int rc = ssh_event_dopoll(e, TCP_POLL_TIMEOUT);
 		if (rc == SSH_AGAIN)
 		{
+			// this is a ugly workaround
+			network_poll_on_client_answer_command(&clients);
 			// timed out, useful to check if we're still RUNNING
 		}
 		else if (rc != SSH_OK)

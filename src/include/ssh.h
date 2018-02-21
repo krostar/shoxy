@@ -21,9 +21,12 @@ typedef struct ssh_config_s
 	struct ssh_channel_callbacks_struct channel_cb;
 	char *exec_command_buffer;
 	int exec_command_buffer_len;
+	char *exec_answer_buffer;
+	int exec_answer_buffer_len;
+	int close_channel;
 } ssh_config_t;
 
-int ssh_create_session(client_t *client);
+int ssh_create_session(client_t *client, ssh_bind b);
 void ssh_terminate_session(client_t *client);
 int ssh_auth_password(client_t *client, const char *user, const char *password);
 
