@@ -1,7 +1,8 @@
 #include <string.h>
 #include <errno.h>
-#include <pty.h>
 #include <poll.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <libssh/libssh.h>
 #include <libssh/callbacks.h>
 #include "shoxy.h"
@@ -45,14 +46,14 @@ int ssh_callback_request_auth_password(client_t *client, ssh_message msg)
 	return (SSH_RETURN_SUCCESS);
 }
 
-int ssh_callback_request_channel_pty(client_t *client, UNUSED ssh_message msg)
+int ssh_callback_request_channel_pty(client_t *client, ssh_message msg)
 {
 	log_client_debug(client, "new channel pty request");
 	ssh_message_channel_request_reply_success(msg);
 	return (SSH_RETURN_SUCCESS);
 }
 
-int ssh_callback_request_channel_shell(client_t *client, UNUSED ssh_message msg)
+int ssh_callback_request_channel_shell(client_t *client, ssh_message msg)
 {
 	log_client_debug(client, "new channel shell request");
 
@@ -71,7 +72,6 @@ int ssh_callback_request_channel_open(client_t *client, ssh_message msg)
 	if (ssh_set_channel_callbacks(client->ssh->channel, &client->ssh->channel_cb) != SSH_OK)
 	{
 		log_client_error(client, "unable to set channel callbacks: %s", ssh_get_error(msg));
-		ssh_channel_free(client->ssh->channel);
 		return (SSH_RETURN_FAILURE);
 	}
 	client->ssh->exec_command_buffer_len = 0;

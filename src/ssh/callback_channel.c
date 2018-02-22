@@ -10,6 +10,13 @@ int ssh_callback_channel_on_data(UNUSED ssh_session session, UNUSED ssh_channel 
 {
 	client_t *client = userdata;
 
+	if (client->ssh->proxy != NULL)
+	{
+		ssh_command_answer(client, data, len);
+		return (len);
+	}
+	// return ssh_channel_write(client->ssh->proxy->channel, data, len);
+
 	client->ssh->exec_command_buffer = realloc(client->ssh->exec_command_buffer, client->ssh->exec_command_buffer_len + len);
 	strncpy(client->ssh->exec_command_buffer + client->ssh->exec_command_buffer_len, data, len);
 	client->ssh->exec_command_buffer_len += len;

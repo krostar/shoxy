@@ -18,7 +18,7 @@ SRC			:=	$(DIR_SOURCES)/shoxy.c \
 						$(DIR_SOURCES)/ssh/callback_request.c \
 						$(DIR_SOURCES)/ssh/callback_channel.c \
 						$(DIR_SOURCES)/ssh/command.c \
-						$(DIR_SOURCES)/ssh/proxify.c
+						$(DIR_SOURCES)/ssh/proxy.c
 OBJ			:= $(SRC:.c=.o)
 
 CFLAGS	:= -W -Wall -Wextra -pedantic -I src/include

@@ -4,6 +4,7 @@
 #include <libssh/server.h>
 #include <libssh/callbacks.h>
 #include "ssh_command.h"
+#include "ssh_proxy.h"
 
 // this is actually used in others parts of the
 // project so the define is prefixed with the
@@ -29,6 +30,8 @@ typedef struct ssh_config_s
 
 	char *exec_answer_buffer;
 	int exec_answer_buffer_len;
+
+	ssh_proxy_config_t *proxy;
 } ssh_config_t;
 
 int ssh_create_session(client_t *client, ssh_bind b);

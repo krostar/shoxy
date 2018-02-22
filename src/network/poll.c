@@ -84,7 +84,11 @@ void network_poll_ugly_workaround(client_t **clients)
 		{
 			if (client->ssh->exec_answer_buffer_len > 0)
 			{
-				int sent = ssh_channel_write(client->ssh->channel, client->ssh->exec_answer_buffer, client->ssh->exec_answer_buffer_len);
+				int sent;
+				if (client->ssh->proxy != NULL && client->ssh->proxy->channel != NULL)
+					sent = ssh_channel_write(client->ssh->proxy->channel, client->ssh->exec_answer_buffer, client->ssh->exec_answer_buffer_len);
+				else
+					sent = ssh_channel_write(client->ssh->channel, client->ssh->exec_answer_buffer, client->ssh->exec_answer_buffer_len);
 				client->ssh->exec_answer_buffer_len -= sent;
 				memcpy(client->ssh->exec_answer_buffer, client->ssh->exec_answer_buffer + sent, client->ssh->exec_answer_buffer_len);
 				client->ssh->exec_answer_buffer = realloc(client->ssh->exec_answer_buffer, client->ssh->exec_answer_buffer_len);

@@ -33,22 +33,24 @@ void network_loop(ssh_bind b)
 		}
 		else if (rc != SSH_OK)
 		{
-			int client_disconnected = 0;
-			// callbacks for exceptions can't be set so we have to check all sessions
-			// we may find that someone disconnected
-			for (; clients != NULL;)
 			{
-				client_t *client = clients;
-				int client_status = ssh_get_status(client->ssh->session);
-				if (client_status & SSH_CLOSED || client_status & SSH_CLOSED_ERROR)
+				int client_disconnected = 0;
+				// callbacks for exceptions can't be set so we have to check all sessions
+				// we may find that someone disconnected
+				for (; clients != NULL;)
 				{
-					network_poll_on_client_critical_error(&clients, client->network->socket);
-					client_disconnected = 1;
-					break;
+					client_t *client = clients;
+					int client_status = ssh_get_status(client->ssh->session);
+					if (client_status & SSH_CLOSED || client_status & SSH_CLOSED_ERROR)
+					{
+						network_poll_on_client_critical_error(&clients, client->network->socket);
+						client_disconnected = 1;
+						break;
+					}
 				}
+				if (client_disconnected != 1)
+					log_error("ssh event poll failed: \"%s\"", ssh_get_error(b));
 			}
-			if (client_disconnected != 1)
-				log_error("ssh event poll failed: \"%s\"", ssh_get_error(b));
 		}
 	}
 

@@ -8,6 +8,7 @@
 #include "client.h"
 #include "network.h"
 #include "ssh_callback.h"
+#include "ssh_proxy.h"
 
 int ssh_create_session(client_t *client, ssh_bind b)
 {
@@ -19,6 +20,7 @@ int ssh_create_session(client_t *client, ssh_bind b)
 		return (SSH_RETURN_FAILURE);
 	}
 
+	client->ssh->proxy = NULL;
 	client->ssh->channel = NULL;
 	client->ssh->exec_command_buffer = NULL;
 	client->ssh->exec_command_buffer_len = 0;
@@ -44,6 +46,7 @@ void ssh_terminate_channel(client_t *client)
 {
 	if (client->ssh->channel == NULL)
 		return;
+	ssh_unproxify(client);
 	if (ssh_channel_send_eof(client->ssh->channel) != SSH_OK)
 		log_client_error(client, "unable to send eof to channel: %s", ssh_get_error(client->ssh->channel));
 	ssh_channel_request_send_exit_status(client->ssh->channel, 0);

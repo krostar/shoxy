@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <libssh/server.h>
 #include "shoxy.h"
+#include "client.h"
 #include "ssh.h"
 #include "ssh_command.h"
-#include "ssh_proxify.h"
+#include "ssh_proxy.h"
 
 static ssh_command_t commands[] = {
 	{"help", 4, &ssh_command_help, "display this help"},

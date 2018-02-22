@@ -20,13 +20,13 @@ int tcp_listen(const char *address, const size_t port)
 	// create a socket
 	if ((server_socket = socket(AF_INET, SOCK_STREAM, getprotobyname("TCP")->p_proto)) == -1)
 	{
-		log_error("unable to create socket");
+		log_error("unable to create socket: %s", strerror(errno));
 		return (NETWORK_RETURN_FAILURE);
 	}
 
 	if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
 	{
-		log_error("unable to set reusable address option on server socket");
+		log_error("unable to set reusable address option on server socket: %s", strerror(errno));
 		close(server_socket);
 		return (NETWORK_RETURN_FAILURE);
 	};
@@ -37,13 +37,13 @@ int tcp_listen(const char *address, const size_t port)
 	server_info.sin_addr.s_addr = inet_addr(address);
 	if (bind(server_socket, (const struct sockaddr *)&server_info, sizeof(server_info)) == -1)
 	{
-		log_error("unable to bind socket");
+		log_error("unable to bind socket: %s", strerror(errno));
 		close(server_socket);
 		return (NETWORK_RETURN_FAILURE);
 	}
 	if (listen(server_socket, TCP_LISTEN_MAX) == -1)
 	{
-		log_error("unable to listen on socket");
+		log_error("unable to listen on socket: %s", strerror(errno));
 		close(server_socket);
 		return (NETWORK_RETURN_FAILURE);
 	}
