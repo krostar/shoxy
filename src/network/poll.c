@@ -69,20 +69,18 @@ int network_poll_on_state_change(socket_t fd, int revents, void *userdata)
 	client_t **clients = cb_data->clients;
 
 	if (ssh_bind_get_fd(cb_data->b) == fd)
-	{
 		if (revents & POLLIN)
 			if (network_poll_on_new_client(clients, cb_data) == NETWORK_RETURN_SUCCESS)
 				return (SSH_OK);
-	}
 
 	return (SSH_ERROR);
 }
 
-void network_poll_on_client_answer_command(client_t **clients)
+void network_poll_ugly_workaround(client_t **clients)
 {
 	for (client_t *client = *clients; client != NULL; client = client->next)
 	{
-		if (client->ssh->channel != NULL && !ssh_channel_is_eof(client->ssh->channel) && !ssh_channel_is_closed(client->ssh->channel))
+		if (client->ssh->channel != NULL)
 		{
 			if (client->ssh->exec_answer_buffer_len > 0)
 			{
@@ -91,11 +89,12 @@ void network_poll_on_client_answer_command(client_t **clients)
 				memcpy(client->ssh->exec_answer_buffer, client->ssh->exec_answer_buffer + sent, client->ssh->exec_answer_buffer_len);
 				client->ssh->exec_answer_buffer = realloc(client->ssh->exec_answer_buffer, client->ssh->exec_answer_buffer_len);
 			}
-			if (client->ssh->close_channel)
-			{
-				network_poll_on_client_critical_error(clients, client->network->socket);
-				break;
-			}
+			ssh_command_exec_if_needed(client);
+		}
+		if (!ssh_is_connected(client->ssh->session))
+		{
+			network_poll_on_client_critical_error(clients, client->network->socket);
+			break;
 		}
 	}
 }

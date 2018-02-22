@@ -3,6 +3,6 @@
 
 #include "client.h"
 
-int ssh_proxify(client_t *client, char *address, int port);
+int ssh_proxify(client_t *client, char *user, char *address, int port);
 
 #endif

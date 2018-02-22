@@ -8,19 +8,23 @@
 #include "shoxy.h"
 #include "client.h"
 
-char *format_with_endline(const char *format)
+char *format_with_endline(const char *format, const char *verbosity)
 {
 	char *new_format;
 	int format_len = strlen(format);
+	int verbosity_len = strlen(verbosity);
 	time_t now = time(0);
 
-	if ((new_format = malloc(sizeof(char) * (21 + format_len + 2))) == NULL)
+	if ((new_format = malloc(sizeof(char) * (20 + format_len + verbosity_len + 6))) == NULL)
 		return (NULL);
-	new_format = memset(new_format, '\0', 21 + format_len + 2);
+	new_format = memset(new_format, '\0', 20 + format_len + verbosity_len + 6);
 
-	strftime(new_format, 21, "%Y-%m-%d %H:%M:%S ", localtime(&now));
+	strftime(new_format, 20, "%Y-%m-%d %H:%M:%S", localtime(&now));
 
-	strcpy(new_format + strlen(new_format), format);
+	new_format = strcat(new_format, " |");
+	new_format = strcat(new_format, verbosity);
+	new_format = strcat(new_format, "| ");
+	new_format = strcat(new_format, format);
 	new_format = strcat(new_format, "\n");
 	return (new_format);
 }
@@ -29,7 +33,7 @@ void log_verror(const char *format, va_list args)
 {
 	char *new_format;
 
-	new_format = format_with_endline(format);
+	new_format = format_with_endline(format, "ERROR");
 	vdprintf(STDERR_FILENO, new_format, args);
 	free(new_format);
 }
@@ -38,7 +42,7 @@ void log_vinfo(const char *format, va_list args)
 {
 	char *new_format;
 
-	new_format = format_with_endline(format);
+	new_format = format_with_endline(format, " INFO");
 	vdprintf(STDOUT_FILENO, new_format, args);
 	free(new_format);
 }
@@ -47,7 +51,7 @@ void log_vdebug(const char *format, va_list args)
 {
 	char *new_format;
 
-	new_format = format_with_endline(format);
+	new_format = format_with_endline(format, "DEBUG");
 	vdprintf(STDOUT_FILENO, new_format, args);
 	free(new_format);
 }

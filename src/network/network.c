@@ -28,7 +28,7 @@ void network_loop(ssh_bind b)
 		if (rc == SSH_AGAIN)
 		{
 			// this is a ugly workaround
-			network_poll_on_client_answer_command(&clients);
+			network_poll_ugly_workaround(&clients);
 			// timed out, useful to check if we're still RUNNING
 		}
 		else if (rc != SSH_OK)
@@ -85,8 +85,21 @@ int network_listen_and_serve(const char *address, const size_t port)
 		return (NETWORK_RETURN_FAILURE);
 	}
 
-	ssh_bind_options_set(b, SSH_BIND_OPTIONS_DSAKEY, "build/keys/ssh_host_dsa_key");
-	ssh_bind_options_set(b, SSH_BIND_OPTIONS_RSAKEY, "build/keys/ssh_host_rsa_key");
+	if (ssh_bind_options_set(b, SSH_BIND_OPTIONS_DSAKEY, "build/keys/ssh_host_dsa_key") != SSH_OK)
+	{
+		log_error("ssh bind set banner option failed: \"%s\"", ssh_get_error(b));
+		return (NETWORK_RETURN_FAILURE);
+	}
+	if (ssh_bind_options_set(b, SSH_BIND_OPTIONS_RSAKEY, "build/keys/ssh_host_rsa_key") != SSH_OK)
+	{
+		log_error("ssh bind set banner option failed: \"%s\"", ssh_get_error(b));
+		return (NETWORK_RETURN_FAILURE);
+	}
+	if (ssh_bind_options_set(b, SSH_BIND_OPTIONS_BANNER, "SHOXY PROXY SERVER") != SSH_OK)
+	{
+		log_error("ssh bind set banner option failed: \"%s\"", ssh_get_error(b));
+		return (NETWORK_RETURN_FAILURE);
+	}
 	ssh_bind_set_fd(b, server_socket);
 
 	network_loop(b);

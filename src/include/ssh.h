@@ -3,6 +3,7 @@
 
 #include <libssh/server.h>
 #include <libssh/callbacks.h>
+#include "ssh_command.h"
 
 // this is actually used in others parts of the
 // project so the define is prefixed with the
@@ -17,18 +18,22 @@ typedef struct client_s client_t;
 typedef struct ssh_config_s
 {
 	ssh_session session;
+
 	ssh_channel channel;
 	struct ssh_channel_callbacks_struct channel_cb;
+
 	char *exec_command_buffer;
 	int exec_command_buffer_len;
+
+	ssh_command_t *exec_command;
+
 	char *exec_answer_buffer;
 	int exec_answer_buffer_len;
-	int close_channel;
 } ssh_config_t;
 
 int ssh_create_session(client_t *client, ssh_bind b);
+void ssh_terminate_channel(client_t *client);
 void ssh_terminate_session(client_t *client);
-int ssh_auth_password(client_t *client, const char *user, const char *password);
 
 typedef struct message_callback_s
 {

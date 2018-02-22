@@ -22,6 +22,7 @@ int ssh_create_session(client_t *client, ssh_bind b)
 	client->ssh->channel = NULL;
 	client->ssh->exec_command_buffer = NULL;
 	client->ssh->exec_command_buffer_len = 0;
+	client->ssh->exec_command = NULL;
 	client->ssh->exec_answer_buffer = NULL;
 	client->ssh->exec_answer_buffer_len = 0;
 
@@ -39,6 +40,19 @@ int ssh_create_session(client_t *client, ssh_bind b)
 	return (SSH_RETURN_SUCCESS);
 }
 
+void ssh_terminate_channel(client_t *client)
+{
+	if (client->ssh->channel == NULL)
+		return;
+	if (ssh_channel_send_eof(client->ssh->channel) != SSH_OK)
+		log_client_error(client, "unable to send eof to channel: %s", ssh_get_error(client->ssh->channel));
+	ssh_channel_request_send_exit_status(client->ssh->channel, 0);
+	if (ssh_channel_close(client->ssh->channel) != SSH_OK)
+		log_client_error(client, "unable to close channel: %s", ssh_get_error(client->ssh->channel));
+	ssh_channel_free(client->ssh->channel);
+	client->ssh->channel = NULL;
+}
+
 void ssh_terminate_session(client_t *client)
 {
 	if (client->ssh->exec_command_buffer != NULL)
@@ -50,11 +64,7 @@ void ssh_terminate_session(client_t *client)
 	client->ssh->exec_answer_buffer = NULL;
 	client->ssh->exec_answer_buffer_len = 0;
 
-	if (client->ssh->channel != NULL)
-	{
-		ssh_channel_close(client->ssh->channel);
-		ssh_channel_free(client->ssh->channel);
-	}
+	ssh_terminate_channel(client);
 	ssh_silent_disconnect(client->ssh->session);
 	ssh_free(client->ssh->session);
 }

@@ -74,7 +74,6 @@ int ssh_callback_request_channel_open(client_t *client, ssh_message msg)
 		ssh_channel_free(client->ssh->channel);
 		return (SSH_RETURN_FAILURE);
 	}
-	client->ssh->close_channel = 0;
 	client->ssh->exec_command_buffer_len = 0;
 	client->ssh->exec_command_buffer = NULL;
 	client->ssh->exec_answer_buffer_len = 0;

@@ -5,38 +5,12 @@
 #include "ssh_command.h"
 #include "ssh_proxify.h"
 
-int ssh_command_help(client_t *client, UNUSED char *remaining, UNUSED int remaining_len)
-{
-	log_client_debug(client, "exec help function call");
-	return (SSH_RETURN_SUCCESS);
-}
-
-int ssh_command_connect(client_t *client, UNUSED char *remaining, int remaining_len)
-{
-	log_client_debug(client, "exec connect function call, remaining = %d", remaining_len);
-	return (ssh_proxify(client, "127.0.0.1", 2022));
-}
-
-int ssh_command_list(client_t *client, UNUSED char *remaining, UNUSED int remaining_len)
-{
-	log_client_debug(client, "exec list function call");
-	return (SSH_RETURN_SUCCESS);
-}
-
-int ssh_command_exit(client_t *client, UNUSED char *remaining, UNUSED int remaining_len)
-{
-	log_client_debug(client, "exec exit function call");
-	client->ssh->close_channel = 1;
-	ssh_command_answer(client, "exiting...\n\r", 12);
-	return (SSH_RETURN_SUCCESS);
-}
-
 static ssh_command_t commands[] = {
-	{"help", 4, &ssh_command_help},
-	{"connect", 7, &ssh_command_connect},
-	{"list", 4, &ssh_command_list},
-	{"exit", 4, &ssh_command_exit},
-	{NULL, 0, NULL},
+	{"help", 4, &ssh_command_help, "display this help"},
+	{"connect", 7, &ssh_command_connect, "param: user@host, connect to host 'host' as 'user'"},
+	{"list", 4, &ssh_command_list, "list the differents endpoint and user"},
+	{"exit", 4, &ssh_command_exit, "quit shoxy"},
+	{NULL, 0, NULL, NULL},
 };
 
 ssh_command_t *ssh_command_find(char *data, int len)
@@ -47,12 +21,18 @@ ssh_command_t *ssh_command_find(char *data, int len)
 	return (NULL);
 }
 
+void ssh_command_prompt(client_t *client)
+{
+	ssh_command_answer(client, "$>", 2);
+}
+
 void ssh_command_welcome(client_t *client)
 {
 	char to_send[512];
 
-	sprintf(to_send, "You successfully connected to shoxy as %s, type help if you need something\n\r$>", "anon");
+	sprintf(to_send, "You successfully connected to shoxy as %s, type help if you need something\n\r", "anon");
 	ssh_command_answer(client, to_send, strlen(to_send));
+	ssh_command_prompt(client);
 }
 
 void ssh_command_answer(client_t *client, void *data, int len)
@@ -60,4 +40,94 @@ void ssh_command_answer(client_t *client, void *data, int len)
 	client->ssh->exec_answer_buffer = realloc(client->ssh->exec_answer_buffer, client->ssh->exec_answer_buffer_len + len);
 	memcpy(client->ssh->exec_answer_buffer + client->ssh->exec_answer_buffer_len, data, len);
 	client->ssh->exec_answer_buffer_len += len;
+}
+
+void ssh_command_exec_if_needed(client_t *client)
+{
+	if (client->ssh->exec_command == NULL)
+		return;
+	if (client->ssh->exec_command->fct(client, client->ssh->exec_command_buffer + client->ssh->exec_command->name_len, client->ssh->exec_command_buffer_len - client->ssh->exec_command->name_len - 1))
+	{
+		log_client_error(client, "failed to execute command");
+		ssh_command_answer(client, "failed to execute command\n\r", 27);
+	}
+	client->ssh->exec_command = NULL;
+	ssh_command_prompt(client);
+	free(client->ssh->exec_command_buffer);
+	client->ssh->exec_command_buffer = NULL;
+	client->ssh->exec_command_buffer_len = 0;
+}
+
+int ssh_command_check(char **remaining, int *remaining_len)
+{
+	if (*remaining_len > 0)
+	{
+		if (**remaining != ' ')
+			return (SSH_RETURN_FAILURE);
+		else
+		{
+			(*remaining_len)--;
+			(*remaining)++;
+		}
+	}
+	return (SSH_RETURN_SUCCESS);
+}
+
+int ssh_command_help(client_t *client, char *remaining, int remaining_len)
+{
+	char raw_help[1024];
+	log_client_debug(client, "exec help function call, remaining %d = %.*s", remaining_len, remaining_len, remaining);
+	if (ssh_command_check(&remaining, &remaining_len) != SSH_RETURN_SUCCESS)
+		return (SSH_RETURN_FAILURE);
+	for (int i = 0; commands[i].name != NULL; i++)
+	{
+		sprintf(raw_help, "%s\n\r\t%s\n\r", commands[i].name, commands[i].help);
+		ssh_command_answer(client, raw_help, strlen(raw_help));
+	}
+	return (SSH_RETURN_SUCCESS);
+}
+
+int ssh_command_connect(client_t *client, char *remaining, int remaining_len)
+{
+	char user[512];
+	char hostname[512];
+	log_client_debug(client, "exec connect function call, remaining %d = %.*s", remaining_len, remaining_len, remaining);
+	if (ssh_command_check(&remaining, &remaining_len) != SSH_RETURN_SUCCESS)
+		return (SSH_RETURN_FAILURE);
+
+	memset(user, '\0', 512);
+	memset(hostname, '\0', 512);
+	for (int i = 0; i < remaining_len; i++)
+	{
+		if (remaining[i] == '@' && (i < remaining_len - 1))
+		{
+			strncpy(user, remaining, i);
+			strncpy(hostname, remaining + i + 1, remaining_len - i - 1);
+			break;
+		}
+	}
+
+	if (user[0] == '\0' || hostname[0] == '\0')
+		return (SSH_RETURN_FAILURE);
+
+	log_client_debug(client, "trying to connect to host '%s' as '%s'", hostname, user);
+	return (ssh_proxify(client, user, "127.0.0.1", 2022));
+}
+
+int ssh_command_list(client_t *client, char *remaining, int remaining_len)
+{
+	log_client_debug(client, "exec list function call, remaining %d = %.*s", remaining_len, remaining_len, remaining);
+	if (ssh_command_check(&remaining, &remaining_len) != SSH_RETURN_SUCCESS)
+		return (SSH_RETURN_FAILURE);
+	return (SSH_RETURN_SUCCESS);
+}
+
+int ssh_command_exit(client_t *client, char *remaining, int remaining_len)
+{
+	log_client_debug(client, "exec exit function call, remaining %d = %.*s", remaining_len, remaining_len, remaining);
+	if (ssh_command_check(&remaining, &remaining_len) != SSH_RETURN_SUCCESS)
+		return (SSH_RETURN_FAILURE);
+	ssh_command_answer(client, "exiting...\n\r", 12);
+	ssh_terminate_channel(client);
+	return (SSH_RETURN_SUCCESS);
 }

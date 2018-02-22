@@ -40,6 +40,6 @@ int tcp_terminate(client_t *client);
 int network_listen_and_serve(const char *address, const size_t port);
 int network_poll_on_client_critical_error(client_t **clients, int socket);
 int network_poll_on_state_change(socket_t fd, int revents, void *userdata);
-void network_poll_on_client_answer_command(client_t **clients);
+void network_poll_ugly_workaround(client_t **clients);
 
 #endif
