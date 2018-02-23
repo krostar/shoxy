@@ -41,6 +41,12 @@ int ssh_callback_request_auth_password(client_t *client, ssh_message msg)
 		return (SSH_RETURN_FAILURE);
 	}
 
+	if ((client->ssh->username = strdup(username)) == NULL)
+	{
+		log_client_error(client, "unable to save user username in memory");
+		return (SSH_RETURN_FAILURE);
+	}
+
 	log_client_info(client, "successfully authenticated as \"%s\"", ssh_message_auth_user(msg));
 	ssh_message_auth_reply_success(msg, 0);
 	return (SSH_RETURN_SUCCESS);

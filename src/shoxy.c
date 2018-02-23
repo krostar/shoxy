@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "shoxy.h"
+#include "config.h"
 #include "network.h"
 
 int main(int ac, char **av)
@@ -11,18 +12,21 @@ int main(int ac, char **av)
 		return (EXIT_FAILURE);
 	}
 
-	if (ac != 3)
+	if (config_parse_cli(ac, av) != CONFIG_RETURN_SUCCESS)
 	{
-		log_error("usage: shoxy [address] [port]");
+		log_error("configuration parser failed");
+		config_free();
 		return (EXIT_FAILURE);
 	}
 
-	if (network_listen_and_serve(av[1], (size_t)atoi(av[2])) != NETWORK_RETURN_SUCCESS)
+	if (network_listen_and_serve(config_get_bind_addr(), config_get_bind_port()) != NETWORK_RETURN_SUCCESS)
 	{
 		log_error("an error occured while trying to listen and serve clients");
+		config_free();
 		return (EXIT_FAILURE);
 	}
 
 	log_info("server close without errors");
+	config_free();
 	return (EXIT_SUCCESS);
 }

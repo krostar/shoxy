@@ -3,6 +3,7 @@
 #include "shoxy.h"
 #include "client.h"
 #include "ssh.h"
+#include "config.h"
 #include "ssh_command.h"
 #include "ssh_proxy.h"
 
@@ -51,9 +52,9 @@ void ssh_command_exec_if_needed(client_t *client)
 	{
 		log_client_error(client, "failed to execute command");
 		ssh_command_answer(client, "failed to execute command\n\r", 27);
+		ssh_command_prompt(client);
 	}
 	client->ssh->exec_command = NULL;
-	ssh_command_prompt(client);
 	free(client->ssh->exec_command_buffer);
 	client->ssh->exec_command_buffer = NULL;
 	client->ssh->exec_command_buffer_len = 0;
@@ -85,11 +86,13 @@ int ssh_command_help(client_t *client, char *remaining, int remaining_len)
 		sprintf(raw_help, "%s\n\r\t%s\n\r", commands[i].name, commands[i].help);
 		ssh_command_answer(client, raw_help, strlen(raw_help));
 	}
+	ssh_command_prompt(client);
 	return (SSH_RETURN_SUCCESS);
 }
 
 int ssh_command_connect(client_t *client, char *remaining, int remaining_len)
 {
+	config_connect_remote_t remote;
 	char user[512];
 	char hostname[512];
 	log_client_debug(client, "exec connect function call, remaining %d = %.*s", remaining_len, remaining_len, remaining);
@@ -112,14 +115,27 @@ int ssh_command_connect(client_t *client, char *remaining, int remaining_len)
 		return (SSH_RETURN_FAILURE);
 
 	log_client_debug(client, "trying to connect to host '%s' as '%s'", hostname, user);
-	return (ssh_proxify(client, user, "127.0.0.1", 2022));
+	if (config_rights_check(&remote, client->ssh->username, hostname, user) != 0)
+	{
+		log_client_error(client, "not authorized to log as %s on %s", user, hostname);
+		ssh_command_answer(client, "unauthorized", 12);
+		return (SSH_RETURN_FAILURE);
+	}
+
+	return (ssh_proxify(client, remote.user, remote.password, remote.addr, remote.port));
 }
 
 int ssh_command_list(client_t *client, char *remaining, int remaining_len)
 {
+	char list[4096];
+
 	log_client_debug(client, "exec list function call, remaining %d = %.*s", remaining_len, remaining_len, remaining);
 	if (ssh_command_check(&remaining, &remaining_len) != SSH_RETURN_SUCCESS)
 		return (SSH_RETURN_FAILURE);
+	config_rights_list(list, client->ssh->username);
+	log_client_debug(client, "rights list: %s", list);
+	ssh_command_answer(client, list, strlen(list));
+	ssh_command_prompt(client);
 	return (SSH_RETURN_SUCCESS);
 }
 

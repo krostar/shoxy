@@ -5,6 +5,9 @@
 int RUNNING;
 
 #define UNUSED __attribute__((__unused__))
+#define LOG_VERBOSITY_DEBUG 2
+#define LOG_VERBOSITY_INFO 1
+#define LOG_VERBOSITY_ERROR 0
 
 typedef struct client_s client_t;
 

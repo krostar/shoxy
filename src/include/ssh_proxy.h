@@ -16,9 +16,10 @@ typedef struct ssh_proxy_config_s
 
 	char *exec_answer_buffer;
 	int exec_answer_buffer_len;
+	int closed;
 } ssh_proxy_config_t;
 
-int ssh_proxify(client_t *client, char *user, char *address, int port);
+int ssh_proxify(client_t *client, char *user, char *password, char *address, int port);
 void ssh_unproxify(client_t *client);
 int ssh_proxy_callback_channel_on_data(ssh_session session, ssh_channel channel, void *data, uint32_t len, int is_stderr, void *userdata);
 void ssh_proxy_callback_channel_on_close(ssh_session session, ssh_channel channel, void *userdata);

@@ -11,7 +11,7 @@
 #define NETWORK_RETURN_SUCCESS 0
 #define NETWORK_RETURN_FAILURE -1
 
-#define TCP_POLL_TIMEOUT 100
+#define TCP_POLL_TIMEOUT 50
 //#define TCP_READ_TIMEOUT 1000  // optional
 //#define TCP_WRITE_TIMEOUT 1000 // optional
 #define TCP_LISTEN_MAX 42

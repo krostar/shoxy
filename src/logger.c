@@ -6,6 +6,7 @@
 #include <string.h>
 #include <time.h>
 #include "shoxy.h"
+#include "config.h"
 #include "client.h"
 
 char *format_with_endline(const char *format, const char *verbosity)
@@ -33,6 +34,8 @@ void log_verror(const char *format, va_list args)
 {
 	char *new_format;
 
+	if (config_get_verbosity() < LOG_VERBOSITY_ERROR)
+		return;
 	new_format = format_with_endline(format, "ERROR");
 	vdprintf(STDERR_FILENO, new_format, args);
 	free(new_format);
@@ -42,6 +45,8 @@ void log_vinfo(const char *format, va_list args)
 {
 	char *new_format;
 
+	if (config_get_verbosity() < LOG_VERBOSITY_INFO)
+		return;
 	new_format = format_with_endline(format, " INFO");
 	vdprintf(STDOUT_FILENO, new_format, args);
 	free(new_format);
@@ -51,6 +56,8 @@ void log_vdebug(const char *format, va_list args)
 {
 	char *new_format;
 
+	if (config_get_verbosity() < LOG_VERBOSITY_DEBUG)
+		return;
 	new_format = format_with_endline(format, "DEBUG");
 	vdprintf(STDOUT_FILENO, new_format, args);
 	free(new_format);

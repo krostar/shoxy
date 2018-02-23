@@ -82,6 +82,13 @@ void network_poll_ugly_workaround(client_t **clients)
 	{
 		if (client->ssh->channel != NULL)
 		{
+			if (client->ssh->proxy != NULL && client->ssh->proxy->closed == 1)
+			{
+				ssh_free(client->ssh->proxy->session);
+				free(client->ssh->proxy);
+				client->ssh->proxy = NULL;
+			}
+
 			if (client->ssh->exec_answer_buffer_len > 0)
 			{
 				int sent;
@@ -95,6 +102,7 @@ void network_poll_ugly_workaround(client_t **clients)
 			}
 			ssh_command_exec_if_needed(client);
 		}
+
 		if (!ssh_is_connected(client->ssh->session))
 		{
 			network_poll_on_client_critical_error(clients, client->network->socket);

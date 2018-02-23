@@ -4,12 +4,13 @@ DIR_SOURCES	:= src
 
 NAME		:= $(DIR_BUILD)/shoxy
 
-ARGS		?= 127.0.0.1 2222
+ARGS		?= config.cfg
 DEBUG		?= 0
 
 SRC			:=	$(DIR_SOURCES)/shoxy.c \
 						$(DIR_SOURCES)/signal.c \
 						$(DIR_SOURCES)/logger.c \
+						$(DIR_SOURCES)/config.c \
 						$(DIR_SOURCES)/client.c \
 						$(DIR_SOURCES)/network/network.c \
 						$(DIR_SOURCES)/network/poll.c \

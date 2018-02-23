@@ -23,6 +23,8 @@ typedef struct ssh_config_s
 	ssh_channel channel;
 	struct ssh_channel_callbacks_struct channel_cb;
 
+	char *username;
+
 	char *exec_command_buffer;
 	int exec_command_buffer_len;
 

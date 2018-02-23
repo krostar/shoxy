@@ -22,6 +22,7 @@ int ssh_create_session(client_t *client, ssh_bind b)
 
 	client->ssh->proxy = NULL;
 	client->ssh->channel = NULL;
+	client->ssh->username = NULL;
 	client->ssh->exec_command_buffer = NULL;
 	client->ssh->exec_command_buffer_len = 0;
 	client->ssh->exec_command = NULL;
@@ -58,6 +59,8 @@ void ssh_terminate_channel(client_t *client)
 
 void ssh_terminate_session(client_t *client)
 {
+	if (client->ssh->username != NULL)
+		free(client->ssh->username);
 	if (client->ssh->exec_command_buffer != NULL)
 		free(client->ssh->exec_command_buffer);
 	client->ssh->exec_command_buffer = NULL;
