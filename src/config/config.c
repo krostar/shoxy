@@ -86,10 +86,13 @@ void config_reload()
 	config_t *new;
 	if (CONFIG != NULL)
 	{
-		if ((new = config_parse_file(CONFIG->config_file)) != NULL)
+		if ((new = config_parse_file(CONFIG->config_file)) == NULL)
+		{
 			log_error("unable to parse file %s", CONFIG->config_file);
-		free(CONFIG);
-		CONFIG = new;
+			free(CONFIG);
+		}
+		else
+			CONFIG = new;
 	}
 	else
 		log_info("no config file to reload");

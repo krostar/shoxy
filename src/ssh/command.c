@@ -33,7 +33,7 @@ void ssh_command_welcome(client_t *client)
 {
 	char to_send[512];
 
-	sprintf(to_send, "You successfully connected to shoxy as %s, type help if you need something\n\r", "anon");
+	sprintf(to_send, "You successfully connected to shoxy as %s, type help if you need something\n\r", client->ssh->username);
 	ssh_command_answer(client, to_send, strlen(to_send));
 	ssh_command_prompt(client);
 }
