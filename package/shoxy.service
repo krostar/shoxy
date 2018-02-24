@@ -1,0 +1,15 @@
+[Unit]
+Description=Shoxy SSH Proxy
+After=network.target
+
+[Service]
+Type=simple
+User=shoxy
+Group=nogroup
+WorkingDirectory=/etc/shoxy/
+ExecStart=/usr/bin/shoxy
+SyslogIdentifier=shoxy
+Restart=always
+
+[Install]
+WantedBy=default.target

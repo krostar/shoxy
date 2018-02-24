@@ -1,0 +1,9 @@
+Package: shoxy
+Version: 1.0-1
+Section: base
+Priority: optional
+Architecture: i386
+Depends: libssh-dev (>= 0.7.5), libpam0g-dev (>= 1.1.8)
+Maintainer: Shoxy Team <team@shoxy.io>
+Homepage: https://github.com/krostar/shoxy
+Description: SSH proxy

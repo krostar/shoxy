@@ -1,5 +1,8 @@
+VERSION		:= 1.0-1
 
 DIR_BUILD	:= build
+DIR_BUILD_DPKG := $(DIR_BUILD)/dpkg/shoxy_$(VERSION)
+DIR_PACKAGE := package
 DIR_SOURCES	:= src
 
 NAME		:= $(DIR_BUILD)/shoxy
@@ -40,6 +43,16 @@ $(NAME): $(OBJ)
 build: $(NAME)
 
 package: build
+	mkdir -p $(DIR_BUILD_DPKG)/DEBIAN
+	mkdir -p $(DIR_BUILD_DPKG)/etc/shoxy
+	mkdir -p $(DIR_BUILD_DPKG)/etc/shoxy/keys
+	mkdir -p $(DIR_BUILD_DPKG)/etc/systemd/system
+	mkdir -p $(DIR_BUILD_DPKG)/usr/local/bin
+	cp $(DIR_PACKAGE)/control $(DIR_BUILD_DPKG)/DEBIAN
+	cp $(DIR_PACKAGE)/config.cfg $(DIR_BUILD_DPKG)/etc/shoxy/
+	cp $(DIR_PACKAGE)/shoxy.service $(DIR_BUILD_DPKG)/etc/systemd/system/
+	cp $(NAME) $(DIR_BUILD_DPKG)/usr/local/bin/
+	cd $(DIR_BUILD_DPKG)/.. && dpkg-deb --build shoxy_$(VERSION)
 
 run: build
 ifeq ($(DEBUG), 1)
