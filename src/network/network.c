@@ -92,16 +92,19 @@ int network_listen_and_serve(const char *address, const size_t port)
 	if (ssh_bind_options_set(b, SSH_BIND_OPTIONS_DSAKEY, config_get_ssh_key_dsa()) != SSH_OK)
 	{
 		log_error("ssh bind set dsa key option failed: \"%s\"", ssh_get_error(b));
+		ssh_bind_free(b);
 		return (NETWORK_RETURN_FAILURE);
 	}
 	if (ssh_bind_options_set(b, SSH_BIND_OPTIONS_RSAKEY, config_get_ssh_key_rsa()) != SSH_OK)
 	{
 		log_error("ssh bind set rsa key option failed: \"%s\"", ssh_get_error(b));
+		ssh_bind_free(b);
 		return (NETWORK_RETURN_FAILURE);
 	}
 	if (ssh_bind_options_set(b, SSH_BIND_OPTIONS_BANNER, "SHOXY PROXY SERVER") != SSH_OK)
 	{
 		log_error("ssh bind set banner option failed: \"%s\"", ssh_get_error(b));
+		ssh_bind_free(b);
 		return (NETWORK_RETURN_FAILURE);
 	}
 	// attach the socket to ssh bind object

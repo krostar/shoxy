@@ -7,15 +7,17 @@ DIR_SOURCES	:= src
 
 NAME		:= $(DIR_BUILD)/shoxy
 
-ARGS		?= config.cfg
+ARGS		?= dev.config.cfg
 DEBUG		?= 0
 
 SRC			:=	$(DIR_SOURCES)/shoxy.c \
 						$(DIR_SOURCES)/signal.c \
 						$(DIR_SOURCES)/logger.c \
-						$(DIR_SOURCES)/config.c \
 						$(DIR_SOURCES)/client.c \
 						$(DIR_SOURCES)/pam.c \
+						$(DIR_SOURCES)/config/config.c \
+						$(DIR_SOURCES)/config/parser.c \
+						$(DIR_SOURCES)/config/usage.c \
 						$(DIR_SOURCES)/network/network.c \
 						$(DIR_SOURCES)/network/poll.c \
 						$(DIR_SOURCES)/network/tcp.c \

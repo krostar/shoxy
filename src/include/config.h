@@ -9,7 +9,7 @@
 
 #define CONFIG_DEFAULT_BIND_ADDR "127.0.0.1"
 #define CONFIG_DEFAULT_BIND_PORT 2222
-#define CONFIG_DEFAULT_VERBOSITY LOG_VERBOSITY_INFO
+#define CONFIG_DEFAULT_VERBOSITY LOG_VERBOSITY_DEBUG
 #define CONFIG_DEFAULT_SSH_KEY_RSA "/etc/shoxy/keys/ssh_host_rsa_key"
 #define CONFIG_DEFAULT_SSH_KEY_DSA "/etc/shoxy/keys/ssh_host_dsa_key"
 
@@ -50,11 +50,20 @@ typedef struct config_s
 	char *ssh_key_rsa;		 // not reloadable
 	char *ssh_key_dsa;		 // not reloadable
 	config_right_t **rights; // reloadable via SIGHUP
+	config_host_t **_hosts;
 } config_t;
 
+typedef struct config_parser
+{
+	char *key;
+	int key_len;
+	int (*fct)(config_t *config, char *remaining, int remaining_len);
+} config_parser_t;
+
 int config_parse_cli(int ac, char **av);
-int config_parse_file(char *filename);
+config_t *config_parse_file(char *filename);
 void config_free();
+void config_free_parsed(config_t *config);
 void config_reload();
 int config_get_verbosity();
 char *config_get_bind_addr();
@@ -64,5 +73,8 @@ char *config_get_ssh_key_dsa();
 config_right_t **config_get_rights();
 void config_rights_list(char *output, char *user_logged);
 int config_rights_check(config_connect_remote_t *remote, char *user_logged, char *hostname, char *user_remote);
+void config_usage_cli(char *binary_name);
+void config_usage_file(char *file_name);
+void config_host_free(config_host_t **hosts);
 
 #endif

@@ -28,6 +28,8 @@ int ssh_proxify(client_t *client, char *user, char *password, char *address, int
 		return (SSH_RETURN_FAILURE);
 	}
 
+	client->ssh->proxy->channel = NULL;
+
 	if ((client->ssh->proxy->session = ssh_new()) == NULL)
 	{
 		log_client_error(client, "unable to create proxified session");

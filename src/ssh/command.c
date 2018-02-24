@@ -123,7 +123,10 @@ int ssh_command_connect(client_t *client, char *remaining, int remaining_len)
 		return (SSH_RETURN_FAILURE);
 	}
 
-	return (ssh_proxify(client, remote.user, remote.password, remote.addr, remote.port));
+	if (ssh_proxify(client, remote.user, remote.password, remote.addr, remote.port) == SSH_RETURN_SUCCESS)
+		return (SSH_RETURN_SUCCESS);
+	ssh_unproxify(client);
+	return (SSH_RETURN_FAILURE);
 }
 
 int ssh_command_list(client_t *client, char *remaining, int remaining_len)
