@@ -12,6 +12,7 @@ SRC			:=	$(DIR_SOURCES)/shoxy.c \
 						$(DIR_SOURCES)/logger.c \
 						$(DIR_SOURCES)/config.c \
 						$(DIR_SOURCES)/client.c \
+						$(DIR_SOURCES)/pam.c \
 						$(DIR_SOURCES)/network/network.c \
 						$(DIR_SOURCES)/network/poll.c \
 						$(DIR_SOURCES)/network/tcp.c \
@@ -26,7 +27,7 @@ CFLAGS	:= -W -Wall -Wextra -pedantic -I src/include
 ifeq ($(DEBUG), 1)
 	CFLAGS += -g
 endif
-LDFLAGS	:= -l ssh -l util
+LDFLAGS	:= -l ssh -l util -l pam
 
 .PHONY: all build run clean fclean re
 

@@ -233,7 +233,7 @@ void config_rights_list(char *output, char *user_logged)
 		break;
 	}
 	if (strlen(output) == base_len)
-		sprintf(output, "no combinaison user/host matches %s's rights, contact your administrator!", user_logged);
+		sprintf(output, "no combinaison user/host matches %s's rights, contact your administrator!\n\r", user_logged);
 }
 
 int config_rights_check(config_connect_remote_t *remote, char *user_logged, char *hostname, char *user_remote)

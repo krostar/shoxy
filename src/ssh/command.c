@@ -118,7 +118,6 @@ int ssh_command_connect(client_t *client, char *remaining, int remaining_len)
 	if (config_rights_check(&remote, client->ssh->username, hostname, user) != 0)
 	{
 		log_client_error(client, "not authorized to log as %s on %s", user, hostname);
-		ssh_command_answer(client, "unauthorized", 12);
 		return (SSH_RETURN_FAILURE);
 	}
 

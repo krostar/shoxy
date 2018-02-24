@@ -7,6 +7,7 @@
 #include <libssh/callbacks.h>
 #include "shoxy.h"
 #include "client.h"
+#include "pam.h"
 #include "ssh.h"
 #include "ssh_callback.h"
 #include "ssh_command.h"
@@ -35,7 +36,7 @@ int ssh_callback_request_auth_password(client_t *client, ssh_message msg)
 
 	log_client_debug(client, "new password try: \"%s:%s\"", username, password);
 
-	if (0)
+	if (pam_authenticate_user(username, password) != 0)
 	{
 		log_client_error(client, "bad login: \"%s\"", ssh_message_auth_user(msg));
 		return (SSH_RETURN_FAILURE);
