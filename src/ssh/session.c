@@ -5,6 +5,7 @@
 #include <libssh/server.h>
 #include <libssh/callbacks.h>
 #include "shoxy.h"
+#include "config.h"
 #include "client.h"
 #include "network.h"
 #include "ssh_callback.h"
@@ -12,7 +13,19 @@
 
 int ssh_create_session(client_t *client, ssh_bind b)
 {
-	int verbosity = SSH_LOG_FUNCTIONS;
+	int verbosity;
+	switch (config_get_verbosity())
+	{
+	case LOG_VERBOSITY_DEBUG:
+		verbosity = SSH_LOG_FUNCTIONS;
+		break;
+	case LOG_VERBOSITY_INFO:
+		verbosity = SSH_LOG_PROTOCOL;
+		break;
+	case LOG_VERBOSITY_ERROR:
+		verbosity = SSH_LOG_WARNING;
+		break;
+	}
 
 	if ((client->ssh->session = ssh_new()) == NULL)
 	{

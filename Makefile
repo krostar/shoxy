@@ -34,10 +34,15 @@ LDFLAGS	:= -l ssh -l util -l pam
 
 .PHONY: all build run clean fclean re
 
-all: build
+all: fclean keys build
+
+keys:
+	mkdir -p $(DIR_BUILD)/keys/
+	ssh-keygen -t dsa -b 1024 -f $(DIR_BUILD)/keys/ssh_host_dsa_key -C "shoxy-server" -N ''
+	ssh-keygen -t rsa -b 8192 -f $(DIR_BUILD)/keys/ssh_host_rsa_key -C "shoxy-server" -N ''
 
 $(NAME): $(OBJ)
-	@mkdir -p $(DIR_BUILD)
+	mkdir -p $(DIR_BUILD)
 	$(CC) $(OBJ) $(LDFLAGS) -o $(NAME)
 
 build: $(NAME)
@@ -65,6 +70,6 @@ clean:
 	$(RM) -f $(OBJ)
 
 fclean: clean
-	$(RM) -f $(NAME)
+	$(RM) -rf $(DIR_BUILD)
 
-re: fclean all
+re: clean build

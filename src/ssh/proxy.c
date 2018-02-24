@@ -1,13 +1,26 @@
 #include <libssh/libssh.h>
 #include <libssh/callbacks.h>
 #include "shoxy.h"
+#include "config.h"
 #include "client.h"
 #include "ssh_proxy.h"
 #include "ssh_command.h"
 
 int ssh_proxify(client_t *client, char *user, char *password, char *address, int port)
 {
-	int verbosity = SSH_LOG_FUNCTIONS;
+	int verbosity;
+	switch (config_get_verbosity())
+	{
+	case LOG_VERBOSITY_DEBUG:
+		verbosity = SSH_LOG_PROTOCOL;
+		break;
+	case LOG_VERBOSITY_INFO:
+		verbosity = SSH_LOG_PROTOCOL;
+		break;
+	case LOG_VERBOSITY_ERROR:
+		verbosity = SSH_LOG_WARNING;
+		break;
+	}
 
 	if ((client->ssh->proxy = malloc(sizeof(ssh_proxy_config_t))) == NULL)
 	{

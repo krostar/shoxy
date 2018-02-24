@@ -9,7 +9,7 @@
 
 #define CONFIG_DEFAULT_BIND_ADDR "127.0.0.1"
 #define CONFIG_DEFAULT_BIND_PORT 2222
-#define CONFIG_DEFAULT_VERBOSITY LOG_VERBOSITY_DEBUG
+#define CONFIG_DEFAULT_VERBOSITY LOG_VERBOSITY_INFO
 #define CONFIG_DEFAULT_SSH_KEY_RSA "/etc/shoxy/keys/ssh_host_rsa_key"
 #define CONFIG_DEFAULT_SSH_KEY_DSA "/etc/shoxy/keys/ssh_host_dsa_key"
 

@@ -113,7 +113,7 @@ int config_parse_file(char *file_name)
 	}
 
 	CONFIG->config_file = strdup(file_name);
-	CONFIG->verbosity = 2;
+	CONFIG->verbosity = LOG_VERBOSITY_ERROR;
 	CONFIG->bind_addr = strdup("127.0.0.1");
 	CONFIG->bind_port = 2222;
 	CONFIG->ssh_key_rsa = strdup("./build/keys/ssh_host_rsa_key");
