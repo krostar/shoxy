@@ -22,16 +22,19 @@ void signal_handler(int sig)
 
 int signal_catch_interruption()
 {
+	// catch CTRL-C
 	if (signal(SIGINT, &signal_handler) == SIG_ERR)
 	{
 		log_error("unable to setup interruption signal catching");
 		return (0);
 	}
+	// catch config reload
 	if (signal(SIGHUP, &signal_handler) == SIG_ERR)
 	{
 		log_error("unable to setup interruption signal catching");
 		return (0);
 	}
+	// catch socket-level error
 	if (signal(SIGPIPE, &signal_handler) == SIG_ERR)
 	{
 		log_error("unable to setup pipe error signal catching");

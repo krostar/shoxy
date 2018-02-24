@@ -107,6 +107,7 @@ void ssh_unproxify(client_t *client)
 	client->ssh->proxy = NULL;
 }
 
+// call everything we receive new data on proxified channel
 int ssh_proxy_callback_channel_on_data(UNUSED ssh_session session, UNUSED ssh_channel channel, void *data, uint32_t len, UNUSED int is_stderr, void *userdata)
 {
 	client_t *client = userdata;
@@ -114,6 +115,7 @@ int ssh_proxy_callback_channel_on_data(UNUSED ssh_session session, UNUSED ssh_ch
 	return (ssh_channel_write(client->ssh->channel, data, len));
 }
 
+// call everything the proxified channel is closed
 void ssh_proxy_callback_channel_on_close(UNUSED ssh_session session, UNUSED ssh_channel channel, void *userdata)
 {
 	client_t *client = userdata;

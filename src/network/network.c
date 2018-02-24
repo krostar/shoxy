@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <poll.h>
 #include "shoxy.h"
+#include "config.h"
 #include "network.h"
 #include "client.h"
 
@@ -74,6 +75,7 @@ int network_listen_and_serve(const char *address, const size_t port)
 	int server_socket;
 	ssh_bind b;
 
+	// create the server socket
 	if ((server_socket = tcp_listen(address, port)) == NETWORK_RETURN_FAILURE)
 	{
 		log_error("fail to listen on given address and port");
@@ -87,14 +89,14 @@ int network_listen_and_serve(const char *address, const size_t port)
 		return (NETWORK_RETURN_FAILURE);
 	}
 
-	if (ssh_bind_options_set(b, SSH_BIND_OPTIONS_DSAKEY, "build/keys/ssh_host_dsa_key") != SSH_OK)
+	if (ssh_bind_options_set(b, SSH_BIND_OPTIONS_DSAKEY, config_get_ssh_key_dsa()) != SSH_OK)
 	{
-		log_error("ssh bind set banner option failed: \"%s\"", ssh_get_error(b));
+		log_error("ssh bind set dsa key option failed: \"%s\"", ssh_get_error(b));
 		return (NETWORK_RETURN_FAILURE);
 	}
-	if (ssh_bind_options_set(b, SSH_BIND_OPTIONS_RSAKEY, "build/keys/ssh_host_rsa_key") != SSH_OK)
+	if (ssh_bind_options_set(b, SSH_BIND_OPTIONS_RSAKEY, config_get_ssh_key_rsa()) != SSH_OK)
 	{
-		log_error("ssh bind set banner option failed: \"%s\"", ssh_get_error(b));
+		log_error("ssh bind set rsa key option failed: \"%s\"", ssh_get_error(b));
 		return (NETWORK_RETURN_FAILURE);
 	}
 	if (ssh_bind_options_set(b, SSH_BIND_OPTIONS_BANNER, "SHOXY PROXY SERVER") != SSH_OK)
@@ -102,6 +104,7 @@ int network_listen_and_serve(const char *address, const size_t port)
 		log_error("ssh bind set banner option failed: \"%s\"", ssh_get_error(b));
 		return (NETWORK_RETURN_FAILURE);
 	}
+	// attach the socket to ssh bind object
 	ssh_bind_set_fd(b, server_socket);
 
 	network_loop(b);

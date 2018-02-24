@@ -85,6 +85,8 @@ void config_free()
 		return;
 	free(CONFIG->config_file);
 	free(CONFIG->bind_addr);
+	free(CONFIG->ssh_key_rsa);
+	free(CONFIG->ssh_key_dsa);
 	if (CONFIG->rights != NULL)
 	{
 		for (int i = 0; CONFIG->rights[i] != NULL; i++)
@@ -114,6 +116,8 @@ int config_parse_file(char *file_name)
 	CONFIG->verbosity = 2;
 	CONFIG->bind_addr = strdup("127.0.0.1");
 	CONFIG->bind_port = 2222;
+	CONFIG->ssh_key_rsa = strdup("./build/keys/ssh_host_rsa_key");
+	CONFIG->ssh_key_dsa = strdup("./build/keys/ssh_host_dsa_key");
 
 	if (CONFIG->config_file == NULL || CONFIG->bind_addr == NULL)
 	{
@@ -211,6 +215,16 @@ char *config_get_bind_addr()
 size_t config_get_bind_port()
 {
 	return (CONFIG != NULL ? CONFIG->bind_port : CONFIG_DEFAULT_BIND_PORT);
+}
+
+char *config_get_ssh_key_rsa()
+{
+	return (CONFIG != NULL ? CONFIG->ssh_key_rsa : CONFIG_DEFAULT_SSH_KEY_RSA);
+}
+
+char *config_get_ssh_key_dsa()
+{
+	return (CONFIG != NULL ? CONFIG->ssh_key_dsa : CONFIG_DEFAULT_SSH_KEY_DSA);
 }
 
 config_right_t **config_get_rights()

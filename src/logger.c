@@ -16,6 +16,7 @@ char *format_with_endline(const char *format, const char *verbosity)
 	int verbosity_len = strlen(verbosity);
 	time_t now = time(0);
 
+	// allocate some space for date and time, verbosity and carriage return
 	if ((new_format = malloc(sizeof(char) * (20 + format_len + verbosity_len + 6))) == NULL)
 		return (NULL);
 	new_format = memset(new_format, '\0', 20 + format_len + verbosity_len + 6);

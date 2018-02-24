@@ -5,6 +5,7 @@
 #include "shoxy.h"
 #include "client.h"
 
+// something went wrong or client disconnected, kick him
 int network_poll_on_client_critical_error(client_t **clients, int socket)
 {
 	client_t *client;
@@ -16,6 +17,7 @@ int network_poll_on_client_critical_error(client_t **clients, int socket)
 	}
 	log_client_error(client, "a critical error occured or client disconnected");
 
+	// we don't want to handle any more event from him
 	ssh_event_remove_session(client->event, client->ssh->session);
 
 	*clients = clients_remove(*clients, client);
@@ -25,6 +27,7 @@ int network_poll_on_client_critical_error(client_t **clients, int socket)
 	return (NETWORK_RETURN_SUCCESS);
 }
 
+// call every time a new client know on server socket door
 int network_poll_on_new_client(client_t **clients, network_server_data_t *data)
 {
 	client_t *client;
@@ -53,6 +56,7 @@ int network_poll_on_new_client(client_t **clients, network_server_data_t *data)
 		return (NETWORK_RETURN_FAILURE);
 	}
 
+	// monitor this new client session
 	if (ssh_event_add_session(data->e, client->ssh->session) != SSH_OK)
 	{
 		log_client_error(client, "unable to add session to ssh poll event: %s", ssh_get_error(data->e));
@@ -78,10 +82,14 @@ int network_poll_on_state_change(socket_t fd, int revents, void *userdata)
 
 void network_poll_ugly_workaround(client_t **clients)
 {
+	// this function is here because of some bugs when modifying session in ssh callbacks
+	// this is an ugly workarround, it would have been so much easier if we could have done this
+	// directly in any callbacks instead of doing it here
 	for (client_t *client = *clients; client != NULL; client = client->next)
 	{
 		if (client->ssh->channel != NULL)
 		{
+			// did the proxy channel closes recently ?
 			if (client->ssh->proxy != NULL && client->ssh->proxy->closed == 1)
 			{
 				ssh_free(client->ssh->proxy->session);
@@ -89,6 +97,7 @@ void network_poll_ugly_workaround(client_t **clients)
 				client->ssh->proxy = NULL;
 			}
 
+			// do we have something to say to the remote end ?
 			if (client->ssh->exec_answer_buffer_len > 0)
 			{
 				int sent;

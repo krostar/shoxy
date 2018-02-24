@@ -42,6 +42,7 @@ int ssh_callback_request_auth_password(client_t *client, ssh_message msg)
 		return (SSH_RETURN_FAILURE);
 	}
 
+	// we only need the username, let's not save the password for security reason
 	if ((client->ssh->username = strdup(username)) == NULL)
 	{
 		log_client_error(client, "unable to save user username in memory");
@@ -91,6 +92,7 @@ int ssh_callback_request_channel_open(client_t *client, ssh_message msg)
 
 int ssh_callback_request_message(UNUSED ssh_session session, ssh_message msg, void *userdata)
 {
+	// function pointor for everthing we need to take care of
 	message_callback_t fcts[] = {
 		{SSH_REQUEST_SERVICE, -1, &ssh_callback_request_service_default},
 
@@ -112,6 +114,7 @@ int ssh_callback_request_message(UNUSED ssh_session session, ssh_message msg, vo
 	int rc = SSH_RETURN_FAILURE;
 
 	log_client_debug(client, "new message: types: \"%d;%d\"", message_type, message_subtype);
+	// let's find the function to call depending on message type and call it
 	for (int i = 0; fcts[i].type != -1; i++)
 	{
 		if (message_type == fcts[i].type && fcts[i].subtype == -1)
@@ -125,9 +128,11 @@ int ssh_callback_request_message(UNUSED ssh_session session, ssh_message msg, vo
 		}
 	}
 
+	// we didn't find something for the message subtype, do we have defined a default callback ?
 	if (founded == -1 && default_cb != NULL)
 		rc = (*default_cb).fct(client, msg);
 
+	// we didn't call any functions or we fail to handle message, reply default error message
 	if (rc != SSH_RETURN_SUCCESS)
 	{
 		log_client_error(client, "unhandled message or response failure");

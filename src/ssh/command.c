@@ -15,6 +15,7 @@ static ssh_command_t commands[] = {
 	{NULL, 0, NULL, NULL},
 };
 
+// if the buffer contains a known command, return it
 ssh_command_t *ssh_command_find(char *data, int len)
 {
 	for (int i = 0; commands[i].name != NULL; i++)
@@ -62,6 +63,7 @@ void ssh_command_exec_if_needed(client_t *client)
 
 int ssh_command_check(char **remaining, int *remaining_len)
 {
+	// is there so remaining caracteres and is it normal ?
 	if (*remaining_len > 0)
 	{
 		if (**remaining != ' ')
