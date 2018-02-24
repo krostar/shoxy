@@ -2,6 +2,8 @@
 
 Shoxy is a SSH proxy server developped for the network module at Epitech for the Spatch project.
 
+/!\ This is a school projet, with everything that comes with... Use it carrefully /!\
+
 ## Description
 
 Let's say there is two people, Bob and Alice. They are using a classic SSH client and they want to connect to some classic SSH server. But John, the sysadmin, doesn't want them to have the real credentials, he want to monitor every SSH login and use a single user base to handle authentication.

@@ -76,5 +76,6 @@ int config_rights_check(config_connect_remote_t *remote, char *user_logged, char
 void config_usage_cli(char *binary_name);
 void config_usage_file(char *file_name);
 void config_host_free(config_host_t **hosts);
+void config_show(config_t *config);
 
 #endif

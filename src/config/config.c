@@ -21,12 +21,12 @@ void config_show(config_t *config)
 	log_debug("\tSSH key rsa path: %s", config->ssh_key_rsa);
 	log_debug("\tSSH key dsa path: %s", config->ssh_key_dsa);
 
-	// for (int i = 0; config->_hosts != NULL && config->_hosts[i] != NULL; i++)
-	// {
-	// 	log_debug("\tHost (%s:%d)", config->_hosts[i]->addr, config->_hosts[i]->port);
-	// 	for (int j = 0; config->_hosts[i]->users != NULL && config->_hosts[i]->users[j] != NULL; j++)
-	// 		log_debug("\t\tUser (%s:%s)", config->_hosts[i]->users[j]->user, config->_hosts[i]->users[j]->password);
-	// }
+	for (int i = 0; config->_hosts != NULL && config->_hosts[i] != NULL; i++)
+	{
+		log_debug("\tHost (%s:%d)", config->_hosts[i]->addr, config->_hosts[i]->port);
+		for (int j = 0; config->_hosts[i]->users != NULL && config->_hosts[i]->users[j] != NULL; j++)
+			log_debug("\t\tUser (%s:%s)", config->_hosts[i]->users[j]->user, config->_hosts[i]->users[j]->password);
+	}
 
 	for (int i = 0; config->rights != NULL && config->rights[i] != NULL; i++)
 	{
@@ -47,7 +47,6 @@ int config_parse_cli(UNUSED int ac, UNUSED char **av)
 		if ((CONFIG = config_parse_file(av[1])) != NULL)
 		{
 			log_info("config successfully updated");
-			config_show(CONFIG);
 			return (CONFIG_RETURN_SUCCESS);
 		}
 		else
@@ -84,10 +83,13 @@ void config_host_free(config_host_t **hosts)
 
 void config_reload()
 {
+	config_t *new;
 	if (CONFIG != NULL)
 	{
-		if ((CONFIG = config_parse_file(CONFIG->config_file)) != NULL)
+		if ((new = config_parse_file(CONFIG->config_file)) != NULL)
 			log_error("unable to parse file %s", CONFIG->config_file);
+		free(CONFIG);
+		CONFIG = new;
 	}
 	else
 		log_info("no config file to reload");
